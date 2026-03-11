@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Color, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { mazeCollisionService } from "./base/collision/mazeCollisionService";
 import { mazeEventBus } from "./base/eventBus/mazeEventBus";
+import mazeEventOrigin from "./base/eventOrigin/mazeEventOrigin";
 import { mazeContext } from "./base/mazeContext";
 import mazeContainer from "./base/objects3d/mazeContainer";
 import mazeLights from "./maze/elements3d/mazeLights";
@@ -28,18 +29,21 @@ export default function MazeWorld() {
         renderer.shadowMap.enabled = true;
 
         const eventBus = new mazeEventBus();
+        const eventOrigin = new mazeEventOrigin(eventBus);
         const collisionService = new mazeCollisionService();
         const context = new mazeContext({
             mazeCollisionService: collisionService,
             mazeEventBus: eventBus,
             scene,
             camera,
+            eventOrigin,
         });
 
         const container = new mazeContainer();
         container.addStaticObject(new mazePlane());
         container.addStaticObject(new mazeLights());
         container.init(context);
+        eventOrigin.registerEventListeners(window);
 
         const resize = () => {
             const width = Math.max(mountElement.clientWidth, 1);
@@ -65,6 +69,7 @@ export default function MazeWorld() {
         return () => {
             window.cancelAnimationFrame(animationFrameId);
             window.removeEventListener("resize", resize);
+            eventOrigin.unregisterEventListeners(window);
             container.dispose(context);
             renderer.dispose();
             if (renderer.domElement.parentElement === mountElement) {
