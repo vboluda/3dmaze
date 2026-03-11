@@ -2,9 +2,9 @@ import type { mazeEventBus } from "../eventBus/mazeEventBus";
 import mazePlayerEvent, { playerAction } from "./mazePlayerEvent";
 
 const keyTranslator = {
-    "KeyW": playerAction.movementUp,
+    "KeyW": playerAction.movementFordward,
     "KeyA": playerAction.movementLeft,
-    "KeyS": playerAction.movementDown,
+    "KeyS": playerAction.movementBackward,
     "KeyD": playerAction.movementRight,
 } as const;
 

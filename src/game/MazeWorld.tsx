@@ -7,6 +7,7 @@ import { mazeContext } from "./base/mazeContext";
 import mazeContainer from "./base/objects3d/mazeContainer";
 import mazeLights from "./maze/elements3d/mazeLights";
 import mazePlane from "./maze/elements3d/mazePlane";
+import mazePlayer from "./maze/mazePlayer";
 
 export default function MazeWorld() {
     const mountRef = useRef<HTMLDivElement | null>(null);
@@ -43,6 +44,10 @@ export default function MazeWorld() {
         container.addStaticObject(new mazePlane());
         container.addStaticObject(new mazeLights());
         container.init(context);
+
+        const player = new mazePlayer();
+        player.init(context);
+
         eventOrigin.registerEventListeners(window);
 
         const resize = () => {
@@ -70,6 +75,7 @@ export default function MazeWorld() {
             window.cancelAnimationFrame(animationFrameId);
             window.removeEventListener("resize", resize);
             eventOrigin.unregisterEventListeners(window);
+            player.dispose(context);
             container.dispose(context);
             renderer.dispose();
             if (renderer.domElement.parentElement === mountElement) {

@@ -4,8 +4,8 @@ import { mazeEventBase } from "../eventBus/mazeEventBase";
 export const playerPrioority = 100;
 
 export const playerAction = {
-    movementUp: 1,
-    movementDown: 2,
+    movementFordward: 1,
+    movementBackward: 2,
     movementLeft: 3,
     movementRight: 4, 
     rotateLeft: 5,
