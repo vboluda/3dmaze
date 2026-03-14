@@ -1,24 +1,44 @@
 import type { mazeEventBase } from "../base/eventBus/mazeEventBase";
-import { mazeContext } from "../base/mazeContext";
+import { mazeContext, type mazeTile } from "../base/mazeContext";
 import type { mazeDynamicObject } from "../base/objects3d/mazeDynamicObject";
 import mazePlayerEvent, { playerAction, playerInputState, type PlayerAction } from "../base/eventOrigin/mazePlayerEvent";
 import mazeTickEvent from "../base/eventOrigin/mazeTickEvent";
-import type { PerspectiveCamera } from "three";
+import { PerspectiveCamera, Vector3 } from "three";
 
-const CAMERA_HEIGHT = 0.5;
+const CAMERA_HEIGHT = 0.3;
 
 export default class mazePlayer implements mazeDynamicObject {
     private camera: PerspectiveCamera | null = null;
-    private readonly movementStep = 0.1;
-    private readonly rotateStep = 0.08;
+    private readonly forwardBackwardStep = 0.05;
+    private readonly strafeStep = 0.045;
+    private readonly rotationStep = 0.02;
+    private readonly maxPitch = Math.PI / 2 - 0.01;
     private readonly activeActions: Set<PlayerAction> = new Set();
+    private readonly spawnTile: mazeTile;
+    private minBound = Number.NEGATIVE_INFINITY;
+    private maxBound = Number.POSITIVE_INFINITY;
+    private yaw = 0;
+    private pitch = 0;
 
-    constructor() {}
+    constructor(spawnTile: mazeTile) {
+        this.spawnTile = spawnTile;
+    }
 
     init(mazeContext: mazeContext): void {
         this.camera = mazeContext.getCamera();
-        this.camera.position.set(0, CAMERA_HEIGHT, 10);
-        this.camera.lookAt(0, 0, 0);
+        const halfMaze = mazeContext.getMazeSize() / 2;
+        const halfTile = 0.5;
+        this.minBound = -halfMaze + halfTile;
+        this.maxBound = halfMaze - halfTile;
+
+        const spawnPosition = mazeContext.calculateXZCoors(this.spawnTile);
+        this.camera.position.set(spawnPosition.x, CAMERA_HEIGHT, spawnPosition.z);
+        this.clampToPlaneBounds();
+        this.camera.lookAt(spawnPosition.x, CAMERA_HEIGHT, spawnPosition.z - 1);
+        this.camera.rotation.order = "YXZ";
+        this.yaw = this.camera.rotation.y;
+        this.pitch = this.camera.rotation.x;
+        this.syncCameraRotation();
         mazeContext.getEventBus().insert3dObjectEvent(this);
     }
 
@@ -28,6 +48,10 @@ export default class mazePlayer implements mazeDynamicObject {
         if (this.camera?.parent) {
             this.camera.parent.remove(this.camera);
         }
+        this.yaw = 0;
+        this.pitch = 0;
+        this.minBound = Number.NEGATIVE_INFINITY;
+        this.maxBound = Number.POSITIVE_INFINITY;
         this.camera = null;
     }
 
@@ -61,31 +85,75 @@ export default class mazePlayer implements mazeDynamicObject {
 
         switch (action) {
             case playerAction.movementFordward:
-                this.camera.position.z -= this.movementStep;
+                this.moveRelative(this.forwardBackwardStep, 0);
                 break;
             case playerAction.movementBackward:
-                this.camera.position.z += this.movementStep;
+                this.moveRelative(-this.forwardBackwardStep, 0);
                 break;
             case playerAction.movementLeft:
-                this.camera.position.x -= this.movementStep;
+                this.moveRelative(0, -this.strafeStep);
                 break;
             case playerAction.movementRight:
-                this.camera.position.x += this.movementStep;
+                this.moveRelative(0, this.strafeStep);
                 break;
             case playerAction.rotateLeft:
-                this.camera.rotation.z += this.rotateStep;
+                this.yaw += this.rotationStep;
+                this.syncCameraRotation();
                 break;
             case playerAction.rotateRight:
-                this.camera.rotation.z -= this.rotateStep;
+                this.yaw -= this.rotationStep;
+                this.syncCameraRotation();
                 break;
             case playerAction.rotateUp:
-                this.camera.rotation.x += this.rotateStep;
+                this.pitch = Math.min(this.maxPitch, this.pitch + this.rotationStep);
+                this.syncCameraRotation();
                 break;
             case playerAction.rotateDown:
-                this.camera.rotation.x -= this.rotateStep;
+                this.pitch = Math.max(-this.maxPitch, this.pitch - this.rotationStep);
+                this.syncCameraRotation();
                 break;
             default:
                 break;
         }
+    }
+
+    private syncCameraRotation(): void {
+        if (!this.camera) {
+            return;
+        }
+
+        this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+    }
+
+    private moveRelative(forwardStep: number, rightStep: number): void {
+        if (!this.camera) {
+            return;
+        }
+
+        const worldUp = new Vector3(0, 1, 0);
+        const forward = new Vector3();
+        this.camera.getWorldDirection(forward);
+        forward.y = 0;
+
+        if (forward.lengthSq() === 0) {
+            return;
+        }
+
+        forward.normalize();
+        const right = new Vector3().crossVectors(forward, worldUp).normalize();
+
+        this.camera.position.addScaledVector(forward, forwardStep);
+        this.camera.position.addScaledVector(right, rightStep);
+        this.clampToPlaneBounds();
+        this.camera.position.y = CAMERA_HEIGHT;
+    }
+
+    private clampToPlaneBounds(): void {
+        if (!this.camera) {
+            return;
+        }
+
+        this.camera.position.x = Math.min(this.maxBound, Math.max(this.minBound, this.camera.position.x));
+        this.camera.position.z = Math.min(this.maxBound, Math.max(this.minBound, this.camera.position.z));
     }
 }

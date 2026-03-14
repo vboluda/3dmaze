@@ -15,15 +15,16 @@ export default class mazePlane implements mazeStaticObject {
     }
 
     const scene = mazeContext.getScene();
+    const mazeSize = mazeContext.getMazeSize();
 
-    const planeGeometry = new PlaneGeometry(32, 32);
+    const planeGeometry = new PlaneGeometry(mazeSize, mazeSize);
     const planeMaterial = new MeshStandardMaterial({ color: 0x4f5d42 });
 
     this.planeMesh = new Mesh(planeGeometry, planeMaterial);
     this.planeMesh.rotation.x = -Math.PI / 2;
     this.planeMesh.receiveShadow = true;
 
-    this.gridHelper = new GridHelper(32, 32, 0x404040, 0x808080);
+    this.gridHelper = new GridHelper(mazeSize, mazeSize, 0x404040, 0x808080);
 
     scene.add(this.planeMesh);
     scene.add(this.gridHelper);

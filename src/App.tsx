@@ -4,7 +4,7 @@ import "./App.css";
 function App() {
     return (
         <main className="app-root">
-            <MazeWorld />
+            <MazeWorld mazeSize={32} initialTile={{ X: 2, Z: 2 }} />
         </main>
     );
 }

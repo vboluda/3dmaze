@@ -9,6 +9,8 @@ const keyTranslator = {
     "KeyA": playerAction.movementLeft,
     "KeyS": playerAction.movementBackward,
     "KeyD": playerAction.movementRight,
+    "KeyQ": playerAction.rotateLeft,
+    "KeyE": playerAction.rotateRight
 } as const;
 
 type movementKey = keyof typeof keyTranslator;

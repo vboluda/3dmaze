@@ -3,13 +3,18 @@ import { Color, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { mazeCollisionService } from "./base/collision/mazeCollisionService";
 import { mazeEventBus } from "./base/eventBus/mazeEventBus";
 import mazeEventOrigin from "./base/eventOrigin/mazeEventOrigin";
-import { mazeContext } from "./base/mazeContext";
+import { mazeContext, type mazeTile } from "./base/mazeContext";
 import mazeContainer from "./base/objects3d/mazeContainer";
 import mazeLights from "./maze/elements3d/mazeLights";
 import mazePlane from "./maze/elements3d/mazePlane";
 import mazePlayer from "./maze/mazePlayer";
 
-export default function MazeWorld() {
+export type MazeWorldProps = {
+    mazeSize: number;
+    initialTile: mazeTile;
+};
+
+export default function MazeWorld({ mazeSize, initialTile }: MazeWorldProps) {
     const mountRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -32,7 +37,7 @@ export default function MazeWorld() {
         const eventBus = new mazeEventBus();
         const eventOrigin = new mazeEventOrigin(eventBus);
         const collisionService = new mazeCollisionService();
-        const context = new mazeContext({
+        const context = new mazeContext(mazeSize, {
             mazeCollisionService: collisionService,
             mazeEventBus: eventBus,
             scene,
@@ -45,7 +50,7 @@ export default function MazeWorld() {
         container.addStaticObject(new mazeLights());
         container.init(context);
 
-        const player = new mazePlayer();
+        const player = new mazePlayer(initialTile);
         player.init(context);
 
         eventOrigin.registerEventListeners(window);
@@ -82,7 +87,7 @@ export default function MazeWorld() {
                 mountElement.removeChild(renderer.domElement);
             }
         };
-    }, []);
+    }, [initialTile, mazeSize]);
 
     return <div className="maze-world" ref={mountRef} />;
 }
