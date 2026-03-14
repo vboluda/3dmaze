@@ -1,5 +1,8 @@
 import type { mazeEventBus } from "../eventBus/mazeEventBus";
-import mazePlayerEvent, { playerAction } from "./mazePlayerEvent";
+import mazePlayerEvent, { playerAction, playerInputState } from "./mazePlayerEvent";
+import mazeTickEvent from "./mazeTickEvent";
+
+const TICK_INTERVAL_MS = 10;
 
 const keyTranslator = {
     "KeyW": playerAction.movementFordward,
@@ -17,6 +20,7 @@ function isMovementKey(key: string): key is movementKey {
 export default class mazeEventOrigin {
     public readonly mazeEventBus: mazeEventBus;
     private readonly pressedKeys: Set<movementKey> = new Set();
+    private tickIntervalId: ReturnType<typeof setInterval> | null = null;
 
     private readonly keydownListener = (event: KeyboardEvent): void => {
         this.keyboardPressEventHandler(event);
@@ -42,11 +46,8 @@ export default class mazeEventOrigin {
 
         this.pressedKeys.add(key);
         const action = keyTranslator[key];
-
-        if (action) {
-            const playerEvent = new mazePlayerEvent(action);
-            this.mazeEventBus.send(playerEvent);
-        }
+        const playerEvent = new mazePlayerEvent(action, playerInputState.pressed);
+        this.mazeEventBus.send(playerEvent);
     }
 
     public keyboardReleaseEventHandler(event: KeyboardEvent): void {
@@ -55,17 +56,44 @@ export default class mazeEventOrigin {
             return;
         }
 
-        this.pressedKeys.delete(key);
+        if (!this.pressedKeys.delete(key)) {
+            return;
+        }
+
+        const action = keyTranslator[key];
+        const playerEvent = new mazePlayerEvent(action, playerInputState.released);
+        this.mazeEventBus.send(playerEvent);
     }
 
     registerEventListeners(target: Window | HTMLElement = window): void {
-        target.addEventListener("keydown", (e) => this.keydownListener(e as KeyboardEvent));
-        target.addEventListener("keyup", (e) => this.keyupListener(e as KeyboardEvent));
+        target.addEventListener("keydown", this.keydownListener as EventListener);
+        target.addEventListener("keyup", this.keyupListener as EventListener);
+        this.startTickGenerator();
     }
 
     unregisterEventListeners(target: Window | HTMLElement = window): void {
-        target.removeEventListener("keydown", (e) => this.keydownListener(e as KeyboardEvent));
-        target.removeEventListener("keyup", (e) => this.keyupListener(e as KeyboardEvent));
+        target.removeEventListener("keydown", this.keydownListener as EventListener);
+        target.removeEventListener("keyup", this.keyupListener as EventListener);
+        this.stopTickGenerator();
         this.pressedKeys.clear();
+    }
+
+    private startTickGenerator(): void {
+        if (this.tickIntervalId !== null) {
+            return;
+        }
+
+        this.tickIntervalId = setInterval(() => {
+            this.mazeEventBus.send(new mazeTickEvent());
+        }, TICK_INTERVAL_MS);
+    }
+
+    private stopTickGenerator(): void {
+        if (this.tickIntervalId === null) {
+            return;
+        }
+
+        clearInterval(this.tickIntervalId);
+        this.tickIntervalId = null;
     }
 }
