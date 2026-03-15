@@ -36,9 +36,11 @@ export default class mazeBox implements mazeStaticObject {
 
         const geometry = new BoxGeometry(1, this.height, 1);
         const material = new MeshStandardMaterial({ color: this.color });
+        const elevation = this.position.y ?? 0;
 
         this.mesh = new Mesh(geometry, material);
-        this.mesh.position.set(mazePosition.x, this.height / 2, mazePosition.z);
+        // Position is centered in tile (x/z) and elevated in world Y by `position.y`.
+        this.mesh.position.set(mazePosition.x, elevation + this.height / 2, mazePosition.z);
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
 
