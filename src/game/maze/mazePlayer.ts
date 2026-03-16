@@ -4,11 +4,15 @@ import type { mazeDynamicObject } from "../base/objects3d/mazeDynamicObject";
 import mazePlayerEvent, { playerAction, playerInputState, type PlayerAction } from "../base/eventOrigin/mazePlayerEvent";
 import mazeTickEvent from "../base/eventOrigin/mazeTickEvent";
 import { PerspectiveCamera, Vector3 } from "three";
+import type { mazeCollisionService } from "../base/collision/mazeCollisionService";
 
 const CAMERA_HEIGHT = 0.3;
+const PLAYER_RADIUS = 0.2;
+const PLAYER_HEIGHT = 1.0;
 
 export default class mazePlayer implements mazeDynamicObject {
     private camera: PerspectiveCamera | null = null;
+    private collisionService: mazeCollisionService | null = null;
     private readonly forwardBackwardStep = 0.05;
     private readonly strafeStep = 0.045;
     private readonly rotationStep = 0.02;
@@ -20,12 +24,17 @@ export default class mazePlayer implements mazeDynamicObject {
     private yaw = 0;
     private pitch = 0;
 
+    getAABB(): null {
+        return null;
+    }
+
     constructor(spawnTile: mazeTile) {
         this.spawnTile = spawnTile;
     }
 
     init(mazeContext: mazeContext): void {
         this.camera = mazeContext.getCamera();
+        this.collisionService = mazeContext.getCollisionService();
         const halfMaze = mazeContext.getMazeSize() / 2;
         const halfTile = 0.5;
         this.minBound = -halfMaze + halfTile;
@@ -52,6 +61,7 @@ export default class mazePlayer implements mazeDynamicObject {
         this.pitch = 0;
         this.minBound = Number.NEGATIVE_INFINITY;
         this.maxBound = Number.POSITIVE_INFINITY;
+        this.collisionService = null;
         this.camera = null;
     }
 
@@ -144,6 +154,10 @@ export default class mazePlayer implements mazeDynamicObject {
 
         this.camera.position.addScaledVector(forward, forwardStep);
         this.camera.position.addScaledVector(right, rightStep);
+        if (this.collisionService) {
+            const resolved = this.collisionService.resolvePosition(this.camera.position, PLAYER_RADIUS, PLAYER_HEIGHT);
+            this.camera.position.copy(resolved);
+        }
         this.clampToPlaneBounds();
         this.camera.position.y = CAMERA_HEIGHT;
     }

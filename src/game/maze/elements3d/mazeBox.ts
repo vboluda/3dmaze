@@ -2,6 +2,7 @@ import { BoxGeometry, Mesh, MeshStandardMaterial } from "three";
 import type { mazeContext } from "../../base/mazeContext";
 import type { mazeStaticObject } from "../../base/objects3d/mazeStaticObject";
 import type { BoxPosition } from "../../components/Box";
+import type { AABB } from "../../base/collision/ICollider";
 
 type MazeBoxOptions = {
     color?: number;
@@ -16,6 +17,11 @@ export default class mazeBox implements mazeStaticObject {
     private readonly position: BoxPosition;
     private readonly color: number;
     private readonly height: number;
+    private aabb: AABB | null = null;
+
+    getAABB(): Readonly<AABB> | null {
+        return this.aabb;
+    }
 
     constructor(position: BoxPosition, options?: MazeBoxOptions) {
         this.position = position;
@@ -45,12 +51,25 @@ export default class mazeBox implements mazeStaticObject {
         this.mesh.receiveShadow = true;
 
         scene.add(this.mesh);
+
+        this.aabb = {
+            minX: mazePosition.x - 0.5,
+            maxX: mazePosition.x + 0.5,
+            minY: elevation,
+            maxY: elevation + this.height,
+            minZ: mazePosition.z - 0.5,
+            maxZ: mazePosition.z + 0.5,
+        };
+        mazeContext.getCollisionService().register(this);
     }
 
     dispose(mazeContext: mazeContext): void {
         if (!this.mesh) {
             return;
         }
+
+        mazeContext.getCollisionService().unregister(this);
+        this.aabb = null;
 
         const scene = mazeContext.getScene();
         scene.remove(this.mesh);

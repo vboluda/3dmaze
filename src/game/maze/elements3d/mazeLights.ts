@@ -6,6 +6,10 @@ export default class mazeLights implements mazeStaticObject {
     private ambientLight: AmbientLight | null = null;
     private directionalLight: DirectionalLight | null = null;
 
+    getAABB(): null {
+        return null;
+    }
+
     init(mazeContext: mazeContext): void {
         if (this.ambientLight || this.directionalLight) {
             this.dispose(mazeContext);

@@ -9,6 +9,10 @@ export default class mazePlane implements mazeStaticObject {
 
     constructor() {}
 
+    getAABB(): null {
+        return null;
+    }
+
   init(mazeContext: mazeContext): void {
     if (this.planeMesh || this.gridHelper) {
       this.dispose(mazeContext);
