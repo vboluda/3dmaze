@@ -1,6 +1,7 @@
 import { Children, Fragment, isValidElement, useEffect, useRef, type ReactElement, type ReactNode } from "react";
 import { Color, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { mazeCollisionService } from "./base/collision/mazeCollisionService";
+import { mazeAssetService } from "./base/assets/mazeAssetService";
 import { mazeEventBus } from "./base/eventBus/mazeEventBus";
 import mazeEventOrigin from "./base/eventOrigin/mazeEventOrigin";
 import { mazeContext, type mazeTile } from "./base/mazeContext";
@@ -69,8 +70,10 @@ export default function MazeWorld({ mazeSize, initialTile, children }: MazeWorld
         const eventBus = new mazeEventBus();
         const eventOrigin = new mazeEventOrigin(eventBus);
         const collisionService = new mazeCollisionService();
+        const assetService = new mazeAssetService();
         const context = new mazeContext(mazeSize, {
             mazeCollisionService: collisionService,
+            mazeAssetService: assetService,
             mazeEventBus: eventBus,
             scene,
             camera,
@@ -117,6 +120,7 @@ export default function MazeWorld({ mazeSize, initialTile, children }: MazeWorld
             eventOrigin.unregisterEventListeners(window);
             player.dispose(context);
             container.dispose(context);
+            assetService.dispose();
             renderer.dispose();
             if (renderer.domElement.parentElement === mountElement) {
                 mountElement.removeChild(renderer.domElement);

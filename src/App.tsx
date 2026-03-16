@@ -9,6 +9,9 @@ function App() {
                 {/* TODO: la API actual usa position.y como coordenada Z de la tesela. Si se quiere una altura opcional, habrá que separar tile (x/z) de elevación (y). */}
                 <Box position={{ x: 10, z: 3 }} />
                 <Box position={{ x: 10, z: 3, y: 1 }} />
+                <Box position={{ x: 10, z: 4 }} />
+                <Box position={{ x: 10, z: 5 }} />
+                <Box position={{ x: 10, z: 6 }} />
                  <Box position={{ x: 5, z: 5, y: 1 }} />
             </MazeWorld>
         </main>

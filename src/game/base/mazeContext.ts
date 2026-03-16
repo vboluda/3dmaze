@@ -2,6 +2,7 @@ import { mazeCollisionService } from "./collision/mazeCollisionService";
 import { mazeEventBus } from "./eventBus/mazeEventBus";
 import { PerspectiveCamera, Scene } from "three";
 import type mazeEventOrigin from "./eventOrigin/mazeEventOrigin";
+import { mazeAssetService } from "./assets/mazeAssetService";
 
 
 export type mazeTile = {
@@ -12,6 +13,7 @@ export type mazeTile = {
 
 export interface mazeContextDependencies {
     mazeCollisionService: mazeCollisionService;
+    mazeAssetService: mazeAssetService;
     mazeEventBus: mazeEventBus;
     scene: Scene;
     camera: PerspectiveCamera;
@@ -20,6 +22,7 @@ export interface mazeContextDependencies {
 
 export class mazeContext {
     private readonly mazeCollisionService: mazeCollisionService;
+    private readonly mazeAssetService: mazeAssetService;
     private readonly mazeEventBus: mazeEventBus;
     private readonly scene: Scene;
     private readonly camera: PerspectiveCamera;
@@ -28,6 +31,7 @@ export class mazeContext {
 
     constructor(mazeSize: number, dependencies: mazeContextDependencies) {
         this.mazeCollisionService = dependencies.mazeCollisionService;
+        this.mazeAssetService = dependencies.mazeAssetService;
         this.mazeEventBus = dependencies.mazeEventBus;
         this.scene = dependencies.scene;
         this.camera = dependencies.camera;
@@ -37,6 +41,10 @@ export class mazeContext {
 
     getCollisionService(): mazeCollisionService {
         return this.mazeCollisionService;
+    }
+
+    getAssetService(): mazeAssetService {
+        return this.mazeAssetService;
     }
 
     getEventBus(): mazeEventBus {
