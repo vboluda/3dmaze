@@ -7,6 +7,7 @@ import mazeEventOrigin from "./base/eventOrigin/mazeEventOrigin";
 import { mazeContext, type mazeTile } from "./base/mazeContext";
 import mazeContainer from "./base/objects3d/mazeContainer";
 import { resolveStaticObjectsFromChildren } from "./components/Box";
+import createPerimeterWalls from "./maze/createPerimeterWalls";
 import mazeLights from "./maze/elements3d/mazeLights";
 import mazePlane from "./maze/elements3d/mazePlane";
 import mazePlayer from "./maze/mazePlayer";
@@ -14,10 +15,11 @@ import mazePlayer from "./maze/mazePlayer";
 export type MazeWorldProps = {
     mazeSize: number;
     initialTile: mazeTile;
+    wall?: number;
     children?: ReactNode;
 };
 
-export default function MazeWorld({ mazeSize, initialTile, children }: MazeWorldProps) {
+export default function MazeWorld({ mazeSize, initialTile, wall = 0, children }: MazeWorldProps) {
     const mountRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -53,6 +55,9 @@ export default function MazeWorld({ mazeSize, initialTile, children }: MazeWorld
         const container = new mazeContainer();
         container.addStaticObject(new mazePlane());
         container.addStaticObject(new mazeLights());
+        for (const wallBox of createPerimeterWalls(mazeSize, wall)) {
+            container.addStaticObject(wallBox);
+        }
         for (const staticObject of resolveStaticObjectsFromChildren(children)) {
             container.addStaticObject(staticObject);
         }
@@ -96,7 +101,7 @@ export default function MazeWorld({ mazeSize, initialTile, children }: MazeWorld
                 mountElement.removeChild(renderer.domElement);
             }
         };
-    }, [children, initialTile, mazeSize]);
+    }, [children, initialTile, mazeSize, wall]);
 
     return <div className="maze-world" ref={mountRef} />;
 }
