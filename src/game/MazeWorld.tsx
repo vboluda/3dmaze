@@ -16,10 +16,19 @@ export type MazeWorldProps = {
     mazeSize: number;
     initialTile: mazeTile;
     wall?: number;
+    ambientLightIntensity?: number;
+    directionalLightIntensity?: number;
     children?: ReactNode;
 };
 
-export default function MazeWorld({ mazeSize, initialTile, wall = 0, children }: MazeWorldProps) {
+export default function MazeWorld({
+    mazeSize,
+    initialTile,
+    wall = 0,
+    ambientLightIntensity = 0.5,
+    directionalLightIntensity = 0.8,
+    children,
+}: MazeWorldProps) {
     const mountRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -54,7 +63,12 @@ export default function MazeWorld({ mazeSize, initialTile, wall = 0, children }:
 
         const container = new mazeContainer();
         container.addStaticObject(new mazePlane());
-        container.addStaticObject(new mazeLights());
+        container.addStaticObject(
+            new mazeLights({
+                ambientIntensity: ambientLightIntensity,
+                directionalIntensity: directionalLightIntensity,
+            }),
+        );
         for (const wallBox of createPerimeterWalls(mazeSize, wall)) {
             container.addStaticObject(wallBox);
         }
@@ -101,7 +115,7 @@ export default function MazeWorld({ mazeSize, initialTile, wall = 0, children }:
                 mountElement.removeChild(renderer.domElement);
             }
         };
-    }, [children, initialTile, mazeSize, wall]);
+    }, [ambientLightIntensity, children, directionalLightIntensity, initialTile, mazeSize, wall]);
 
     return <div className="maze-world" ref={mountRef} />;
 }

@@ -7,8 +7,13 @@ import WallV from "./game/components/WallV";
 function App() {
     return (
         <main className="app-root">
-            <MazeWorld mazeSize={32} initialTile={{ X: 1, Z: 1 }} wall={1}>
-                {/* TODO: la API actual usa position.y como coordenada Z de la tesela. Si se quiere una altura opcional, habrá que separar tile (x/z) de elevación (y). */}
+            <MazeWorld
+                mazeSize={32}
+                initialTile={{ X: 1, Z: 1 }}
+                wall={1}
+                ambientLightIntensity={0.1}
+                directionalLightIntensity={0.2}
+            >
                 <Box position={{ x: 10, z: 3 }} />
                 <Box position={{ x: 10, z: 3, y: 1 }} />
                 <Box position={{ x: 10, z: 4 }} />
@@ -25,7 +30,6 @@ function App() {
                 <WallV position={{ x: 13, z: 20 }} length={5} />
                 <WallV position={{ x: 13, z: 20, y: 1 }} length={5} />
                 <WallV position={{ x: 12, z: 20, y: 1 }} length={5} />
-
                 <WallV position={{ x: 2, z: 1}} length={3} />
                 <WallV position={{ x: 2, z: 1, y: 1 }} length={3} />
                 <WallV position={{ x: 1, z: 1, y: 1 }} length={3} />
