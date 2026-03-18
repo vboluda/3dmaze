@@ -47,6 +47,11 @@ export function resolveStaticObjectsFromChildren(children: ReactNode): mazeStati
         const staticFactory = child.type as mazeStaticFactoryComponent;
         if (staticFactory.toMazeStaticObject) {
             staticObjects.push(staticFactory.toMazeStaticObject(child.props));
+            return;
+        }
+
+        if (typeof child.type === "function") {
+            staticObjects.push(...resolveStaticObjectsFromChildren(child.type(child.props)));
         }
     });
 
