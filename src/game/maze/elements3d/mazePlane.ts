@@ -26,7 +26,7 @@ export default class mazePlane implements mazeStaticObject {
 
     this.planeMesh = new Mesh(planeGeometry, planeMaterial);
     this.planeMesh.rotation.x = -Math.PI / 2;
-    this.planeMesh.receiveShadow = true;
+    this.planeMesh.receiveShadow = false;
 
     this.gridHelper = new GridHelper(mazeSize, mazeSize, 0x404040, 0x808080);
 

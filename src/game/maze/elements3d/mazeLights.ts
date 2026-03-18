@@ -21,7 +21,7 @@ export default class mazeLights implements mazeStaticObject {
 
         this.directionalLight = new DirectionalLight(0xffffff, 0.8);
         this.directionalLight.position.set(10, 20, 10);
-        this.directionalLight.castShadow = true;
+        this.directionalLight.castShadow = false;
 
         scene.add(this.ambientLight);
         scene.add(this.directionalLight);

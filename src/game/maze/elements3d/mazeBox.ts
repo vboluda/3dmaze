@@ -63,8 +63,8 @@ export default class mazeBox implements mazeStaticObject {
         this.mesh = new Mesh(geometry, materials);
         // Position is centered in tile (x/z) and elevated in world Y by `position.y`.
         this.mesh.position.set(mazePosition.x, elevation + this.height / 2, mazePosition.z);
-        this.mesh.castShadow = true;
-        this.mesh.receiveShadow = true;
+        this.mesh.castShadow = false;
+        this.mesh.receiveShadow = false;
 
         scene.add(this.mesh);
 
