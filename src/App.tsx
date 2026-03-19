@@ -11,8 +11,9 @@ function App() {
                 mazeSize={32}
                 initialTile={{ X: 1, Z: 1 }}
                 wall={1}
-                ambientLightIntensity={0.1}
-                directionalLightIntensity={0.2}
+                ambientLightIntensity={0.5}
+                directionalLightIntensity={1}
+                gridOn={true}
             >
                 <Box position={{ x: 10, z: 3 }} />
                 <Box position={{ x: 10, z: 3, y: 1 }} />

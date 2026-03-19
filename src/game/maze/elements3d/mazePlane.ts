@@ -6,8 +6,11 @@ import { GridHelper, Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
 export default class mazePlane implements mazeStaticObject {
   private planeMesh: Mesh<PlaneGeometry, MeshStandardMaterial> | null = null;
   private gridHelper: GridHelper | null = null;
+  private gridOn: boolean;
 
-    constructor() {}
+    constructor(gridOn: boolean=false) {
+      this.gridOn = gridOn;
+    }
 
     getAABB(): null {
         return null;
@@ -20,19 +23,25 @@ export default class mazePlane implements mazeStaticObject {
 
     const scene = mazeContext.getScene();
     const mazeSize = mazeContext.getMazeSize();
+    const planeTexture = mazeContext.getAssetService().getTexture("ConcreteDark");
 
     const planeGeometry = new PlaneGeometry(mazeSize, mazeSize);
-    const planeMaterial = new MeshStandardMaterial({ color: 0x4f5d42 });
+    const planeMaterial = new MeshStandardMaterial({
+      color: 0xffffff,
+      map: planeTexture,
+    });
 
     this.planeMesh = new Mesh(planeGeometry, planeMaterial);
     this.planeMesh.rotation.x = -Math.PI / 2;
     this.planeMesh.receiveShadow = false;
 
-    this.gridHelper = new GridHelper(mazeSize, mazeSize, 0x404040, 0x808080);
-
     scene.add(this.planeMesh);
-    scene.add(this.gridHelper);
+    
+    if (this.gridOn) {
+      this.gridHelper = new GridHelper(mazeSize, mazeSize, 0xFF0000, 0xFF0000);
+      scene.add(this.gridHelper);
     }
+  }
 
   dispose(mazeContext: mazeContext): void {
     const scene = mazeContext.getScene();

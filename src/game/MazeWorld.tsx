@@ -18,6 +18,7 @@ export type MazeWorldProps = {
     wall?: number;
     ambientLightIntensity?: number;
     directionalLightIntensity?: number;
+    gridOn?: boolean;
     children?: ReactNode;
 };
 
@@ -27,6 +28,7 @@ export default function MazeWorld({
     wall = 0,
     ambientLightIntensity = 0.5,
     directionalLightIntensity = 0.8,
+    gridOn = false,
     children,
 }: MazeWorldProps) {
     const mountRef = useRef<HTMLDivElement | null>(null);
@@ -62,7 +64,7 @@ export default function MazeWorld({
         });
 
         const container = new mazeContainer();
-        container.addStaticObject(new mazePlane());
+        container.addStaticObject(new mazePlane(gridOn));
         container.addStaticObject(
             new mazeLights({
                 ambientIntensity: ambientLightIntensity,
@@ -115,7 +117,7 @@ export default function MazeWorld({
                 mountElement.removeChild(renderer.domElement);
             }
         };
-    }, [ambientLightIntensity, children, directionalLightIntensity, initialTile, mazeSize, wall]);
+    }, [ambientLightIntensity, children, directionalLightIntensity, gridOn, initialTile, mazeSize, wall]);
 
     return <div className="maze-world" ref={mountRef} />;
 }
