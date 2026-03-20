@@ -5,12 +5,14 @@ import mazeTickEvent from "./mazeTickEvent";
 const TICK_INTERVAL_MS = 10;
 
 const keyTranslator = {
-    "KeyW": playerAction.movementFordward,
-    "KeyA": playerAction.movementLeft,
-    "KeyS": playerAction.movementBackward,
-    "KeyD": playerAction.movementRight,
-    "KeyQ": playerAction.rotateLeft,
-    "KeyE": playerAction.rotateRight
+    "ArrowUp": playerAction.movementFordward,
+    "ArrowLeft": playerAction.movementLeft,
+    "ArrowDown": playerAction.movementBackward,
+    "ArrowRight": playerAction.movementRight,
+    "KeyA": playerAction.rotateLeft,
+    "KeyD": playerAction.rotateRight,
+    "KeyW":playerAction.rotateUp,
+    "KeyS": playerAction.rotateDown
 } as const;
 
 type movementKey = keyof typeof keyTranslator;

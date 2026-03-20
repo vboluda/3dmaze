@@ -9,6 +9,8 @@ import type { mazeCollisionService } from "../base/collision/mazeCollisionServic
 const CAMERA_HEIGHT = 0.3;
 const PLAYER_RADIUS = 0.2;
 const PLAYER_HEIGHT = 1.0;
+const MAX_LOOK_UP_PITCH = Math.PI / 3; // +60 deg
+const MIN_LOOK_DOWN_PITCH = -Math.PI / 6; // -30 deg
 
 export default class mazePlayer implements mazeDynamicObject {
     private camera: PerspectiveCamera | null = null;
@@ -16,7 +18,6 @@ export default class mazePlayer implements mazeDynamicObject {
     private readonly forwardBackwardStep = 0.05;
     private readonly strafeStep = 0.045;
     private readonly rotationStep = 0.02;
-    private readonly maxPitch = Math.PI / 2 - 0.01;
     private readonly activeActions: Set<PlayerAction> = new Set();
     private readonly spawnTile: mazeTile;
     private minBound = Number.NEGATIVE_INFINITY;
@@ -46,7 +47,7 @@ export default class mazePlayer implements mazeDynamicObject {
         this.camera.lookAt(spawnPosition.x, CAMERA_HEIGHT, spawnPosition.z - 1);
         this.camera.rotation.order = "YXZ";
         this.yaw = this.camera.rotation.y;
-        this.pitch = this.camera.rotation.x;
+        this.pitch = this.clampPitch(this.camera.rotation.x);
         this.syncCameraRotation();
         mazeContext.getEventBus().insert3dObjectEvent(this);
     }
@@ -115,11 +116,11 @@ export default class mazePlayer implements mazeDynamicObject {
                 this.syncCameraRotation();
                 break;
             case playerAction.rotateUp:
-                this.pitch = Math.min(this.maxPitch, this.pitch + this.rotationStep);
+                this.pitch = Math.min(MAX_LOOK_UP_PITCH, this.pitch + this.rotationStep);
                 this.syncCameraRotation();
                 break;
             case playerAction.rotateDown:
-                this.pitch = Math.max(-this.maxPitch, this.pitch - this.rotationStep);
+                this.pitch = Math.max(MIN_LOOK_DOWN_PITCH, this.pitch - this.rotationStep);
                 this.syncCameraRotation();
                 break;
             default:
@@ -133,6 +134,10 @@ export default class mazePlayer implements mazeDynamicObject {
         }
 
         this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+    }
+
+    private clampPitch(value: number): number {
+        return Math.min(MAX_LOOK_UP_PITCH, Math.max(MIN_LOOK_DOWN_PITCH, value));
     }
 
     private moveRelative(forwardStep: number, rightStep: number): void {
