@@ -13,7 +13,7 @@ function App() {
                 wall={1}
                 ambientLightIntensity={0.5}
                 directionalLightIntensity={1}
-                gridOn={true}
+                gridOn={false}
             >
                 <Box position={{ x: 10, z: 3 }} />
                 <Box position={{ x: 10, z: 3, y: 1 }} />
@@ -38,6 +38,30 @@ function App() {
                 <WallH position={{ x: 1, z: 5 }} length={3} />
                 <WallH position={{ x: 1, z: 5, y: 1 }} length={3} />
                 <WallH position={{ x: 1, z: 4, y: 1 }} length={3} />
+
+                <WallH position={{ x: 23, z: 23 }} length={6} />
+                <WallH position={{ x: 23, z: 18 }} length={6} />
+                <WallV position={{ x: 28, z: 18 }} length={6} />
+                <Box position={{ x: 23, z:22 }} />
+                <Box position={{ x: 23, z:20 }} />
+                <Box position={{ x: 23, z:19 }} />
+                
+                <WallH position={{ x: 23, z: 23, y:1 }} length={6} />
+                <WallH position={{ x: 23, z: 18, y:1 }} length={6} />
+                <WallV position={{ x: 28, z: 18, y:1 }} length={6} />
+                <Box position={{ x: 23, z:22, y:1 }} />
+                <Box position={{ x: 23, z:20, y:1 }} />
+                <Box position={{ x: 23, z:19, y:1 }} />
+                <Box position={{ x: 23, z:21, y:1 }} />
+
+                <WallH position={{ x: 23, z: 23, y:2}} length={6} />
+                <WallH position={{ x: 23, z: 22, y:2}} length={6} />
+                <WallH position={{ x: 23, z: 21, y:2}} length={6} />
+                <WallH position={{ x: 23, z: 20, y:2}} length={6} />
+                <WallH position={{ x: 23, z: 21, y:2}} length={6} />
+                <WallH position={{ x: 23, z: 20, y:2}} length={6} />
+                <WallH position={{ x: 23, z: 19, y:2}} length={6} />
+                <WallH position={{ x: 23, z: 18, y:2}} length={6} />
             </MazeWorld>
         </main>
     );
