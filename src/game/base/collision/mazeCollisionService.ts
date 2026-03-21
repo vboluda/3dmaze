@@ -13,8 +13,9 @@ export class mazeCollisionService {
         this.colliders.delete(collider);
     }
 
-    applyPlayerPush(position: Vector3, radius: number, playerHeight: number): Vector3 {
+    applyPlayerPush(position: Vector3, radius: number, playerHeight: number): { position: Vector3; wasPushed: boolean } {
         let result = position.clone();
+        let wasPushed = false;
 
         for (const collider of this.colliders) {
             const aabb = collider.getAABB();
@@ -41,9 +42,10 @@ export class mazeCollisionService {
             result.x += pushDelta.x;
             result.z += pushDelta.z;
             result = this.resolvePosition(result, radius, playerHeight);
+            wasPushed = true;
         }
 
-        return result;
+        return { position: result, wasPushed };
     }
 
     resolvePosition(position: Vector3, radius: number, playerHeight: number): Vector3 {

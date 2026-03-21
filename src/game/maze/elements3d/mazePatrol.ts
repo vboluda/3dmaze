@@ -47,11 +47,7 @@ export default class mazePatrol implements mazeDynamicObject {
         return this.aabb;
     }
 
-    getPlayerPushDelta(): Readonly<{ x: number; z: number }> | null {
-        if (this.playerPushDelta.x === 0 && this.playerPushDelta.z === 0) {
-            return null;
-        }
-
+    getPlayerPushDelta(): Readonly<{ x: number; z: number }> {
         return {
             x: this.playerPushDelta.x * 2,
             z: this.playerPushDelta.z * 2,

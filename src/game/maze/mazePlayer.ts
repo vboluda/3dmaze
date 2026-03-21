@@ -1,6 +1,7 @@
 import type { mazeEventBase } from "../base/eventBus/mazeEventBase";
 import { mazeContext, type mazeTile } from "../base/mazeContext";
 import type { mazeDynamicObject } from "../base/objects3d/mazeDynamicObject";
+import mazeEventHurt from "../base/eventOrigin/mazeEventHurt";
 import mazePlayerEvent, { playerAction, playerInputState, type PlayerAction } from "../base/eventOrigin/mazePlayerEvent";
 import mazeTickEvent from "../base/eventOrigin/mazeTickEvent";
 import { PerspectiveCamera, Vector3 } from "three";
@@ -9,12 +10,15 @@ import type { mazeCollisionService } from "../base/collision/mazeCollisionServic
 const CAMERA_HEIGHT = 0.3;
 const PLAYER_RADIUS = 0.2;
 const PLAYER_HEIGHT = 1.0;
+const PLAYER_HURT_IMPACT = 1;
+const PLAYER_DAMAGE_COOLDOWN_MS = 350;
 const MAX_LOOK_UP_PITCH = Math.PI / 3; // +60 deg
 const MIN_LOOK_DOWN_PITCH = -Math.PI / 6; // -30 deg
 
 export default class mazePlayer implements mazeDynamicObject {
     private camera: PerspectiveCamera | null = null;
     private collisionService: mazeCollisionService | null = null;
+    private context: mazeContext | null = null;
     private readonly forwardBackwardStep = 0.05;
     private readonly strafeStep = 0.045;
     private readonly rotationStep = 0.02;
@@ -24,6 +28,7 @@ export default class mazePlayer implements mazeDynamicObject {
     private maxBound = Number.POSITIVE_INFINITY;
     private yaw = 0;
     private pitch = 0;
+    private lastDamageTimestampMs = Number.NEGATIVE_INFINITY;
 
     getAABB(): null {
         return null;
@@ -34,6 +39,7 @@ export default class mazePlayer implements mazeDynamicObject {
     }
 
     init(mazeContext: mazeContext): void {
+        this.context = mazeContext;
         this.camera = mazeContext.getCamera();
         this.collisionService = mazeContext.getCollisionService();
         const halfMaze = mazeContext.getMazeSize() / 2;
@@ -62,7 +68,9 @@ export default class mazePlayer implements mazeDynamicObject {
         this.pitch = 0;
         this.minBound = Number.NEGATIVE_INFINITY;
         this.maxBound = Number.POSITIVE_INFINITY;
+        this.lastDamageTimestampMs = Number.NEGATIVE_INFINITY;
         this.collisionService = null;
+        this.context = null;
         this.camera = null;
     }
 
@@ -88,7 +96,7 @@ export default class mazePlayer implements mazeDynamicObject {
             this.applyPlayerAction(activeAction);
         }
 
-        this.applyEnemyPush();
+        this.applyEnemyPush(mazeEvent.timestampMs);
     }
 
     private applyPlayerAction(action: PlayerAction): void {
@@ -178,19 +186,32 @@ export default class mazePlayer implements mazeDynamicObject {
         this.camera.position.z = Math.min(this.maxBound, Math.max(this.minBound, this.camera.position.z));
     }
 
-    private applyEnemyPush(): void {
+    private applyEnemyPush(timestampMs: number): void {
         if (!this.camera || !this.collisionService) {
             return;
         }
 
-        const pushedPosition = this.collisionService.applyPlayerPush(
+        const pushResult = this.collisionService.applyPlayerPush(
             this.camera.position,
             PLAYER_RADIUS,
             PLAYER_HEIGHT,
         );
 
-        this.camera.position.copy(pushedPosition);
+        this.camera.position.copy(pushResult.position);
         this.clampToPlaneBounds();
         this.camera.position.y = CAMERA_HEIGHT;
+
+        if (pushResult.wasPushed) {
+            this.applyDamage(timestampMs);
+        }
+    }
+
+    private applyDamage(timestampMs: number): void {
+        if (!this.context || timestampMs - this.lastDamageTimestampMs < PLAYER_DAMAGE_COOLDOWN_MS) {
+            return;
+        }
+
+        this.lastDamageTimestampMs = timestampMs;
+        this.context.getEventBus().send(new mazeEventHurt(PLAYER_HURT_IMPACT));
     }
 }
