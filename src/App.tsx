@@ -3,6 +3,7 @@ import Box from "./game/components/Box";
 import WallH from "./game/components/WallH";
 import "./App.css";
 import WallV from "./game/components/WallV";
+import Patrol from "./game/components/Patrol";
 
 function App() {
     return (
@@ -62,6 +63,8 @@ function App() {
                 <WallH position={{ x: 23, z: 20, y:2}} length={6} />
                 <WallH position={{ x: 23, z: 19, y:2}} length={6} />
                 <WallH position={{ x: 23, z: 18, y:2}} length={6} />
+
+                <Patrol position={{ x: 20, z: 20 }} speed={{x:0, z:-1}}/>
             </MazeWorld>
         </main>
     );

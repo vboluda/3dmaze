@@ -18,6 +18,8 @@ type mazeStaticFactoryComponent = {
     toMazeStaticObject?: (props: unknown) => mazeStaticObject;
 };
 
+type mazeRenderableComponent = (props: unknown) => ReactNode;
+
 export default function Box(props: BoxProps) {
     void props;
     return null;
@@ -51,7 +53,8 @@ export function resolveStaticObjectsFromChildren(children: ReactNode): mazeStati
         }
 
         if (typeof child.type === "function") {
-            staticObjects.push(...resolveStaticObjectsFromChildren(child.type(child.props)));
+            const renderableComponent = child.type as mazeRenderableComponent;
+            staticObjects.push(...resolveStaticObjectsFromChildren(renderableComponent(child.props)));
         }
     });
 
