@@ -13,6 +13,39 @@ export class mazeCollisionService {
         this.colliders.delete(collider);
     }
 
+    applyPlayerPush(position: Vector3, radius: number, playerHeight: number): Vector3 {
+        let result = position.clone();
+
+        for (const collider of this.colliders) {
+            const aabb = collider.getAABB();
+            const pushDelta = collider.getPlayerPushDelta?.();
+            if (!aabb || !pushDelta) {
+                continue;
+            }
+
+            // Skip if collider is entirely above player's head or below the floor.
+            if (aabb.minY >= playerHeight || aabb.maxY <= 0) {
+                continue;
+            }
+
+            const closestX = Math.max(aabb.minX, Math.min(result.x, aabb.maxX));
+            const closestZ = Math.max(aabb.minZ, Math.min(result.z, aabb.maxZ));
+            const dx = result.x - closestX;
+            const dz = result.z - closestZ;
+
+            if (dx * dx + dz * dz >= radius * radius) {
+                continue;
+            }
+
+            result = result.clone();
+            result.x += pushDelta.x;
+            result.z += pushDelta.z;
+            result = this.resolvePosition(result, radius, playerHeight);
+        }
+
+        return result;
+    }
+
     resolvePosition(position: Vector3, radius: number, playerHeight: number): Vector3 {
         const result = position.clone();
 

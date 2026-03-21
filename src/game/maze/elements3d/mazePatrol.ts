@@ -31,6 +31,7 @@ export default class mazePatrol implements mazeDynamicObject {
     private readonly position: MazePatrolPosition;
     private readonly speed: MazePatrolSpeed;
     private readonly velocity = new Vector3();
+    private readonly playerPushDelta = new Vector3();
     private minBound = Number.NEGATIVE_INFINITY;
     private maxBound = Number.POSITIVE_INFINITY;
     private lastTickTimestampMs: number | null = null;
@@ -44,6 +45,17 @@ export default class mazePatrol implements mazeDynamicObject {
 
     getAABB(): Readonly<AABB> | null {
         return this.aabb;
+    }
+
+    getPlayerPushDelta(): Readonly<{ x: number; z: number }> | null {
+        if (this.playerPushDelta.x === 0 && this.playerPushDelta.z === 0) {
+            return null;
+        }
+
+        return {
+            x: this.playerPushDelta.x * 2,
+            z: this.playerPushDelta.z * 2,
+        };
     }
 
     init(mazeContext: mazeContext): void {
@@ -70,6 +82,7 @@ export default class mazePatrol implements mazeDynamicObject {
         this.minBound = -halfMaze + PATROL_RADIUS;
         this.maxBound = halfMaze - PATROL_RADIUS;
         this.lastTickTimestampMs = null;
+        this.playerPushDelta.set(0, 0, 0);
 
         this.syncAABB();
         mazeContext.getScene().add(this.mesh);
@@ -95,6 +108,7 @@ export default class mazePatrol implements mazeDynamicObject {
         this.lastTickTimestampMs = null;
         this.minBound = Number.NEGATIVE_INFINITY;
         this.maxBound = Number.POSITIVE_INFINITY;
+        this.playerPushDelta.set(0, 0, 0);
         this.velocity.set(this.speed.x, 0, this.speed.z);
     }
 
@@ -112,11 +126,14 @@ export default class mazePatrol implements mazeDynamicObject {
         this.lastTickTimestampMs = mazeEvent.timestampMs;
 
         if (deltaSeconds === 0) {
+            this.playerPushDelta.set(0, 0, 0);
             return;
         }
 
+        const previousPosition = this.mesh.position.clone();
         this.moveOnAxis("x", deltaSeconds);
         this.moveOnAxis("z", deltaSeconds);
+        this.playerPushDelta.copy(this.mesh.position).sub(previousPosition);
         this.syncAABB();
     }
 

@@ -87,6 +87,8 @@ export default class mazePlayer implements mazeDynamicObject {
         for (const activeAction of this.activeActions) {
             this.applyPlayerAction(activeAction);
         }
+
+        this.applyEnemyPush();
     }
 
     private applyPlayerAction(action: PlayerAction): void {
@@ -174,5 +176,21 @@ export default class mazePlayer implements mazeDynamicObject {
 
         this.camera.position.x = Math.min(this.maxBound, Math.max(this.minBound, this.camera.position.x));
         this.camera.position.z = Math.min(this.maxBound, Math.max(this.minBound, this.camera.position.z));
+    }
+
+    private applyEnemyPush(): void {
+        if (!this.camera || !this.collisionService) {
+            return;
+        }
+
+        const pushedPosition = this.collisionService.applyPlayerPush(
+            this.camera.position,
+            PLAYER_RADIUS,
+            PLAYER_HEIGHT,
+        );
+
+        this.camera.position.copy(pushedPosition);
+        this.clampToPlaneBounds();
+        this.camera.position.y = CAMERA_HEIGHT;
     }
 }

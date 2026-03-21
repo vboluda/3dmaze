@@ -9,4 +9,5 @@ export type AABB = {
 
 export interface ICollider {
     getAABB(): Readonly<AABB> | null;
+    getPlayerPushDelta?(): Readonly<{ x: number; z: number }> | null;
 }
