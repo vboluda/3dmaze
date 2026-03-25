@@ -1,4 +1,4 @@
-import { CapsuleGeometry, Mesh, MeshStandardMaterial, SRGBColorSpace, Vector3 } from "three";
+import { CapsuleGeometry, CylinderGeometry, Mesh, MeshStandardMaterial, Vector3 } from "three";
 import type { mazeCollisionService } from "../../base/collision/mazeCollisionService";
 import type { AABB } from "../../base/collision/ICollider";
 import type { mazeEventBase } from "../../base/eventBus/mazeEventBase";
@@ -20,11 +20,16 @@ export type MazePatrolSpeed = {
 const PATROL_RADIUS = 0.25;
 const PATROL_LENGTH = 0.5;
 const PATROL_HEIGHT = PATROL_LENGTH + PATROL_RADIUS * 2;
+const PATROL_BARREL_RADIUS = 0.06;
+const PATROL_BARREL_LENGTH = 0.9;
+const PATROL_BARREL_TURN_PER_TICK = Math.PI / 12;
 const FACE_DIRECTION_OFFSET = - Math.PI / 2;
 const POSITION_EPSILON = 0.0001;
+const MAX_MOVEMENT_STEP_SECONDS = 1 / 60;
 
 export default class mazePatrol implements mazeDynamicObject {
     private mesh: Mesh<CapsuleGeometry, MeshStandardMaterial> | null = null;
+    private barrelMesh: Mesh<CylinderGeometry, MeshStandardMaterial> | null = null;
     private collisionService: mazeCollisionService | null = null;
     private readonly position: MazePatrolPosition;
     private readonly speed: MazePatrolSpeed;
@@ -60,15 +65,22 @@ export default class mazePatrol implements mazeDynamicObject {
         this.collisionService = mazeContext.getCollisionService();
 
         const geometry = new CapsuleGeometry(PATROL_RADIUS, PATROL_LENGTH, 8, 16);
-        const texture = mazeContext.getAssetService().getTexture("enemy1");
-        texture.colorSpace = SRGBColorSpace;
-        texture.center.set(0.5, 0.5);
         const material = new MeshStandardMaterial({
-            map: texture,
+            color: 0xff0000,
             roughness: 0.85,
             metalness: 0.05,
         });
         this.mesh = new Mesh(geometry, material);
+        const barrelGeometry = new CylinderGeometry(PATROL_BARREL_RADIUS, PATROL_BARREL_RADIUS, PATROL_BARREL_LENGTH, 12);
+        const barrelMaterial = new MeshStandardMaterial({
+            color: 0xaa0000,
+            roughness: 0.7,
+            metalness: 0.1,
+        });
+        this.barrelMesh = new Mesh(barrelGeometry, barrelMaterial);
+        this.barrelMesh.rotation.z = Math.PI / 2;
+        this.barrelMesh.position.set(0, 0, 0);
+        this.mesh.add(this.barrelMesh);
         this.syncFacingRotation();
 
         const mazePosition = mazeContext.calculateXZCoors({
@@ -103,7 +115,13 @@ export default class mazePatrol implements mazeDynamicObject {
             this.mesh.material.dispose();
         }
 
+        if (this.barrelMesh) {
+            this.barrelMesh.geometry.dispose();
+            this.barrelMesh.material.dispose();
+        }
+
         this.mesh = null;
+        this.barrelMesh = null;
         this.collisionService = null;
         this.aabb = null;
         this.lastTickTimestampMs = null;
@@ -116,6 +134,10 @@ export default class mazePatrol implements mazeDynamicObject {
     update(mazeEvent: mazeEventBase): void {
         if (!this.mesh || !(mazeEvent instanceof mazeTickEvent)) {
             return;
+        }
+
+        if (this.barrelMesh) {
+            this.barrelMesh.rotation.y += PATROL_BARREL_TURN_PER_TICK;
         }
 
         if (this.lastTickTimestampMs === null) {
@@ -132,8 +154,15 @@ export default class mazePatrol implements mazeDynamicObject {
         }
 
         const previousPosition = this.mesh.position.clone();
-        this.moveOnAxis("x", deltaSeconds);
-        this.moveOnAxis("z", deltaSeconds);
+        let remainingSeconds = deltaSeconds;
+
+        while (remainingSeconds > 0) {
+            const stepSeconds = Math.min(remainingSeconds, MAX_MOVEMENT_STEP_SECONDS);
+            this.moveOnAxis("x", stepSeconds);
+            this.moveOnAxis("z", stepSeconds);
+            remainingSeconds -= stepSeconds;
+        }
+
         this.playerPushDelta.copy(this.mesh.position).sub(previousPosition);
         this.syncAABB();
     }
@@ -167,12 +196,16 @@ export default class mazePatrol implements mazeDynamicObject {
 
         if (Math.abs(resolvedValue - currentValue) > POSITION_EPSILON) {
             if (axis === "x") {
-                this.mesh.position.x = resolvedValue;
+                this.mesh.position.x = this.clampToBounds(resolvedValue);
             } else {
-                this.mesh.position.z = resolvedValue;
+                this.mesh.position.z = this.clampToBounds(resolvedValue);
             }
             this.invertAxisVelocity(axis);
         }
+    }
+
+    private clampToBounds(value: number): number {
+        return Math.min(this.maxBound, Math.max(this.minBound, value));
     }
 
     private resolvePatrolPosition(): Vector3 {
